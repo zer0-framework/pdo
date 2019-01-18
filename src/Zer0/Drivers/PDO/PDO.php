@@ -3,6 +3,8 @@
 namespace Zer0\Drivers\PDO;
 
 use Zer0\Drivers\Traits\QueryLog;
+use Zer0\Exceptions\PDOException;
+use Zer0\Exceptions\QueryFailedException;
 
 /**
  * Class PDO
@@ -72,7 +74,7 @@ class PDO extends \PDO
      * @param  string $sql Query
      * @param  array $values = [] Array of values
      * @return \PDOStatement
-     * @throws \Exception
+     * @throws QueryFailedException
      */
     public function query(string $sql, array $values = []): \PDOStatement
     {
@@ -88,7 +90,7 @@ class PDO extends \PDO
             } else {
                 return $stmt = parent::query($sql);
             }
-        } catch (\Exception $e) {
+        } catch (\PDOException $e) {
             $message = $e->getMessage();
             if (strpos($message, 'server has gone away') !== false ||
                 strpos($message, 'Error reading result set') !== false) {
@@ -102,7 +104,7 @@ class PDO extends \PDO
                 static::setPdoAttributes($this->instance);
                 return $stmt = $this->instance->query($sql);
             }
-            throw new \Exception('SQL query has failed: ' . $sql, 1, $e);
+            throw new QueryFailedException('SQL query has failed: ' . $sql, 1, $e);
         } finally {
             if ($this->queryLogging && isset($stmt)) {
                 $this->queryLog[] = [
