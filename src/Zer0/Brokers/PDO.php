@@ -12,6 +12,16 @@ use Zer0\Drivers\PDO\Tracy\BarPanel;
 class PDO extends Base
 {
     /**
+     * @param string $name
+     * @param bool $caching
+     * @return \Zer0\Drivers\PDO\PDO
+     */
+    public function get(string $name = '', bool $caching = true): \Zer0\Drivers\PDO\PDO
+    {
+        return parent::get($name, $caching);
+    }
+    
+    /**
      * @param ConfigInterface $config
      * @return \Zer0\Drivers\PDO\PDO
      */
