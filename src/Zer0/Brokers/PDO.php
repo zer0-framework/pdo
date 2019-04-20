@@ -27,7 +27,7 @@ class PDO extends Base
      */
     public function instantiate(ConfigInterface $config): \Zer0\Drivers\PDO\PDO
     {
-        $tracy = $this->app->broker('Tracy')->get();
+        $tracy = $this->app->factory('Tracy');
         $pdo = new \Zer0\Drivers\PDO\PDO(
             self::getDSN($config->dsn),
             $config->username ?? null,
@@ -40,7 +40,7 @@ class PDO extends Base
             $panel = new BarPanel($pdo);
             $panel->title = 'PDO (' . $this->lastName . ')';
             $tracy->addPanel($panel);
-            $this->app->broker('HTTP')->get()->on('endRequest', function () use ($pdo) {
+            $this->app->factory('HTTP')->on('endRequest', function () use ($pdo) {
                 $pdo->resetQueryLog();
             });
         }
