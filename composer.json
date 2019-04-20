@@ -1,8 +1,8 @@
 {
-    "name"  : "Zer0-Framework/PDO",
+    "name"  : "zer0-framework/pdo",
     "type"  : "library",
     "keywords": ["Zer0", "highload"],
-    "homepage": "https://github.com/Zer0-Framework/PDO",
+    "homepage": "https://github.com/zer0-framework/pdo",
     "license" : "GPL-3.0-or-later",
     "description": "",
     "authors" : [
@@ -14,13 +14,13 @@
     ],
     "support" : {
         "email" : "kak.serpom.po.yaitsam@gmail.com",
-        "issues": "https://github.com/Zer0-Framework/PDO/issues"
+        "issues": "https://github.com/zer0-framework/pdo/issues"
     },
     "require": {
         "php": ">=7.2",
         "ext-pdo": "*",
-        "Zer0-Framework/Zer0": "*",
-        "Zer0-Framework/Config": "*"
+        "zer0-framework/core": "*",
+        "zer0-framework/config": "*"
     },
     "autoload": {
         "classmap": ["src/"]
