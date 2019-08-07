@@ -31,7 +31,7 @@ class PDO extends \PDO
 
     /**
      * @var
-   `  */
+     * `  */
     protected $driverName;
 
 
@@ -69,10 +69,28 @@ class PDO extends \PDO
     }
 
     /**
+     * @param string $table
+     * @param array $row
+     * @return \PDOStatement
+     * @throws QueryFailedException
+     */
+    public function insert(string $table, array $row): \PDOStatement
+    {
+        $fields = '';
+        $values = '';
+        foreach ($row as $field => $value) {
+            $fields .= ($fields !== '' ? ', ' : '') . $field;
+            $values .= ($values !== '' ? ', ' : '') . $this->quote($value);
+        }
+
+        return $this->query('INSERT INTO ' . $table . ' (' . $fields . ') VALUES (' . $values . ')');
+    }
+
+    /**
      * Execute SQL query
      *
-     * @param  string $sql Query
-     * @param  array $values = [] Array of values
+     * @param string $sql Query
+     * @param array $values = [] Array of values
      * @return \PDOStatement
      * @throws QueryFailedException
      */
@@ -119,15 +137,10 @@ class PDO extends \PDO
      * Resolves placeholders in given SQL query. Values corresponding to individual placeholders can be arrays,
      * in which case they are converted to IN() clauses.
      *
-     * @example ('SELECT * FROM table WHERE id = :id', ['id' => 1]);
-     *          returns 'SELECT * FROM table WHERE id = 1'
-     *
-     * @example ('SELECT * FROM table WHERE id = ?', [1]);
-     *          returns 'SELECT * FROM table WHERE id = 1'
-     *
-     * @example ('SELECT * FROM table WHERE id = ?', [[1,2,3]]);
-     *          returns 'SELECT * FROM table WHERE id IN(1, 2, 3)'
-     *
+     * @param string $sql Query
+     * @param array $values Array of values or key/value pairs (if using named placeholders). Values can be
+     *                       arrays, and will be converted to IN().
+     * @return string
      * @example ('SELECT * FROM table WHERE id = ?', []);
      *          returns 'SELECT * FROM table WHERE id = NULL'
      *
@@ -137,10 +150,15 @@ class PDO extends \PDO
      * @example ('SELECT * FROM table WHERE id IN(:ids)', ['ids' => [4,5,6]]);
      *          returns 'SELECT * FROM table WHERE id IN(4, 5, 6)'
      *
-     * @param  string $sql Query
-     * @param  array $values Array of values or key/value pairs (if using named placeholders). Values can be
-     *                       arrays, and will be converted to IN().
-     * @return string
+     * @example ('SELECT * FROM table WHERE id = :id', ['id' => 1]);
+     *          returns 'SELECT * FROM table WHERE id = 1'
+     *
+     * @example ('SELECT * FROM table WHERE id = ?', [1]);
+     *          returns 'SELECT * FROM table WHERE id = 1'
+     *
+     * @example ('SELECT * FROM table WHERE id = ?', [[1,2,3]]);
+     *          returns 'SELECT * FROM table WHERE id IN(1, 2, 3)'
+     *
      */
     public function replacePlaceholders(string $sql, ?array $values = null): string
     {
