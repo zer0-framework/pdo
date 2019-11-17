@@ -31,7 +31,7 @@ class PDO extends Base
         $pdo = new \Zer0\Drivers\PDO\PDO(
             self::getDSN($config->dsn),
             $config->username ?? null,
-            $config->password ?? null,
+            $config->password ?? $config->dsn['password'] ?? null,
             $config->options ?? [],
             $tracy !== null
         );
@@ -59,10 +59,17 @@ class PDO extends Base
         }
         $ret = '';
         foreach ($dsn as $type => $sub) {
+            if (!is_array($sub)) {
+                continue;
+            }
+            if ($type === 'mssql') {
+                $type = 'dblib';
+            }
             $ret .= $type . ':';
             foreach ($sub as $key => $value) {
                 $ret .= $key . '=' . $value . ';';
             }
+            break;
         }
         return $ret;
     }
