@@ -111,7 +111,11 @@ class PDO extends \PDO
         } catch (\PDOException $e) {
             $message = $e->getMessage();
             if (strpos($message, 'server has gone away') !== false ||
-                strpos($message, 'Error reading result set') !== false) {
+                strpos($message, 'Error reading result set') !== false ||
+                strpos($message, 'no connection to the server') !== false ||
+                strpos($message, 'MySQL server has gone away') !== false)
+
+            {
                 $this->instance = new \PDO(
                     $this->construct[0],
                     $this->construct[1],
