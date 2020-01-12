@@ -34,6 +34,10 @@ class PDO extends \PDO
      * `  */
     protected $driverName;
 
+    /**
+     * @var bool
+     */
+    protected $initialized = false;
 
     /**
      * PDO constructor.
@@ -48,17 +52,28 @@ class PDO extends \PDO
         if ($logging) {
             $this->queryLogging = true;
         }
+        $this->construct = [$dsn, $username, $passwd, $options];
+    }
+
+    /**
+     *
+     */
+    public function init(): void
+    {
+        if ($this->initialized) {
+            return;
+        }
+        $this->initialized = true;
         if ($this->queryLogging) {
             $t0 = microtime(true);
-            parent::__construct($dsn, $username, $passwd, $options);
+            parent::__construct(...$this->construct);
             $this->queryLog[] = [
                 'sql' => 'CONNECT',
                 'time' => microtime(true) - $t0,
             ];
         } else {
-            parent::__construct($dsn, $username, $passwd, $options);
+            parent::__construct(...$this->construct);
         }
-        $this->construct = [$dsn, $username, $passwd, $options];
         $this->driverName = $this->getAttribute(PDO::ATTR_DRIVER_NAME);
         $this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $this->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
@@ -96,6 +111,10 @@ class PDO extends \PDO
      */
     public function query(string $sql, array $values = []): \PDOStatement
     {
+        if (!$this->initialized) {
+            $this->init();
+        }
+
         if ($this->queryLogging) {
             $t0 = microtime(true);
         }
@@ -113,9 +132,7 @@ class PDO extends \PDO
             if (strpos($message, 'server has gone away') !== false ||
                 strpos($message, 'Error reading result set') !== false ||
                 strpos($message, 'no connection to the server') !== false ||
-                strpos($message, 'MySQL server has gone away') !== false)
-
-            {
+                strpos($message, 'MySQL server has gone away') !== false) {
                 $this->instance = new \PDO(
                     $this->construct[0],
                     $this->construct[1],
