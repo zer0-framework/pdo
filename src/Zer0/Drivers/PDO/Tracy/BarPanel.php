@@ -74,8 +74,7 @@ class BarPanel implements \Tracy\IBarPanel
         $html = '<img src="' . $this->icon . '" alt="PDO queries logger" /> ';
         $count = count($queries);
         if ($count == 0) {
-            $html .= 'no queries!';
-            return $html;
+            return '';
         } elseif ($count == 1) {
             $html .= '1 query';
         } else {
