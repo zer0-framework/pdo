@@ -56,6 +56,32 @@ class PDO extends \PDO
     }
 
     /**
+     * @param int $attribute
+     * @param mixed $value
+     * @return bool|void
+     */
+    public function setAttribute($attribute, $value)
+    {
+        if (!$this->initialized) {
+            $this->init();
+        }
+        return parent::setAttribute($attribute, $value);
+    }
+
+    /**
+     * @param string $string
+     * @param int $parameter_type
+     * @return false|string
+     */
+    public function quote($string, $parameter_type = \PDO::PARAM_STR)
+    {
+        if (!$this->initialized) {
+            $this->init();
+        }
+        return \PDO::quote($string, $parameter_type);
+    }
+
+    /**
      *
      */
     public function init(): void
