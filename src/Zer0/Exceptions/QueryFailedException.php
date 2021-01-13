@@ -1,6 +1,6 @@
 <?php
 
-namespace Zer0\Exceptions;
+namespace Zer0\PDO\Exceptions;
 
 /**
  * Class QueryFailedException

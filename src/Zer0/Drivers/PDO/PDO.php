@@ -3,8 +3,7 @@
 namespace Zer0\Drivers\PDO;
 
 use Zer0\Drivers\Traits\QueryLog;
-use Zer0\Exceptions\PDOException;
-use Zer0\Exceptions\QueryFailedException;
+use Zer0\PDO\Exceptions\QueryFailedException;
 
 /**
  * Class PDO
