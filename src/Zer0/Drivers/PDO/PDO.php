@@ -158,7 +158,7 @@ class PDO extends \PDO
                 strpos($message, 'Error reading result set') !== false ||
                 strpos($message, 'no connection to the server') !== false ||
                 strpos($message, 'MySQL server has gone away') !== false) {
-                $this->instance = new self(...$this);
+                $this->instance = new self(...$this->construct);
                 return $stmt = $this->instance->query($sql);
             }
             throw new QueryFailedException('SQL query has failed: ' . $sql, 1, $e);
