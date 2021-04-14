@@ -158,14 +158,7 @@ class PDO extends \PDO
                 strpos($message, 'Error reading result set') !== false ||
                 strpos($message, 'no connection to the server') !== false ||
                 strpos($message, 'MySQL server has gone away') !== false) {
-                $this->instance = new \PDO(
-                    $this->construct[0],
-                    $this->construct[1],
-                    $this->construct[2],
-                    $this->construct[3]
-                );
-                $this->setNamesSent = false;
-                static::setPdoAttributes($this->instance);
+                $this->instance = new self(...$this);
                 return $stmt = $this->instance->query($sql);
             }
             throw new QueryFailedException('SQL query has failed: ' . $sql, 1, $e);
