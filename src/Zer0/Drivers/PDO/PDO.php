@@ -134,7 +134,7 @@ class PDO extends \PDO
      * @return \PDOStatement
      * @throws QueryFailedException
      */
-    public function query(string $sql, array $values = []): \PDOStatement
+    public function queryBind(string $sql, array $values = []): \PDOStatement
     {
         if (!$this->initialized) {
             $this->init();
