@@ -7,6 +7,7 @@ use Zer0\PDO\Exceptions\QueryFailedException;
 
 /**
  * Class PDO
+ *
  * @package Zer0\Drivers\PDO
  */
 class PDO extends \PDO
@@ -40,13 +41,14 @@ class PDO extends \PDO
 
     /**
      * PDO constructor.
-     * @param string $dsn
+     *
+     * @param string      $dsn
      * @param null|string $username
      * @param null|string $passwd
-     * @param array $options
-     * @param bool $logging
+     * @param array       $options
+     * @param bool        $logging
      */
-    public function __construct(string $dsn, ?string $username = null, ?string $passwd = null, array $options = [], bool $logging = false)
+    public function __construct (string $dsn, ?string $username = null, ?string $passwd = null, array $options = [], bool $logging = false)
     {
         if ($logging) {
             $this->queryLogging = true;
@@ -55,35 +57,39 @@ class PDO extends \PDO
     }
 
     /**
-     * @param int $attribute
+     * @param int   $attribute
      * @param mixed $value
+     *
      * @return bool|void
      */
-    public function setAttribute($attribute, $value)
+    public function setAttribute ($attribute, $value)
     {
         if (!$this->initialized) {
             $this->init();
         }
+
         return parent::setAttribute($attribute, $value);
     }
 
     /**
      * @param string $string
-     * @param int $parameter_type
+     * @param int    $parameter_type
+     *
      * @return false|string
      */
-    public function quote($string, $parameter_type = \PDO::PARAM_STR)
+    public function quote ($string, $parameter_type = \PDO::PARAM_STR)
     {
         if (!$this->initialized) {
             $this->init();
         }
+
         return \PDO::quote($string, $parameter_type);
     }
 
     /**
      *
      */
-    public function init(): void
+    public function init (): void
     {
         if ($this->initialized) {
             return;
@@ -93,10 +99,11 @@ class PDO extends \PDO
             $t0 = microtime(true);
             parent::__construct(...$this->construct);
             $this->queryLog[] = [
-                'sql' => 'CONNECT',
+                'sql'  => 'CONNECT',
                 'time' => microtime(true) - $t0,
             ];
-        } else {
+        }
+        else {
             parent::__construct(...$this->construct);
         }
         $this->driverName = $this->getAttribute(PDO::ATTR_DRIVER_NAME);
@@ -110,11 +117,12 @@ class PDO extends \PDO
 
     /**
      * @param string $table
-     * @param array $row
+     * @param array  $row
+     *
      * @return \PDOStatement
      * @throws QueryFailedException
      */
-    public function insert(string $table, array $row): \PDOStatement
+    public function insert (string $table, array $row): \PDOStatement
     {
         $fields = '';
         $values = '';
@@ -127,14 +135,58 @@ class PDO extends \PDO
     }
 
     /**
+     * @param string   $query
+     * @param int|null $fetchMode
+     * @param mixed    ...$fetchModeArgs
+     *
+     * @return false|\PDOStatement|void
+     */
+    public function query (string $query, ?int $fetchMode = null, mixed ...$fetchModeArgs)
+    {
+        if (!$this->initialized) {
+            $this->init();
+        }
+        if ($this->queryLogging) {
+            $t0 = microtime(true);
+        }
+        try {
+            if ($this->instance !== null) {
+                return $stmt = $this->instance->query($query);
+            }
+            else {
+                return $stmt = parent::query($query);
+            }
+        } catch (\PDOException $e) {
+            $message = $e->getMessage();
+            if (strpos($message, 'server has gone away') !== false ||
+                strpos($message, 'Error reading result set') !== false ||
+                strpos($message, 'no connection to the server') !== false ||
+                strpos($message, 'MySQL server has gone away') !== false) {
+                $this->instance = new self(...$this->construct);
+
+                return $stmt = $this->instance->query($query);
+            }
+            throw new QueryFailedException('SQL query has failed: ' . $query, 1, $e);
+        } finally {
+            if ($this->queryLogging && isset($stmt)) {
+                $this->queryLog[] = [
+                    'sql'  => $query,
+                    'time' => microtime(true) - $t0,
+                ];
+            }
+        }
+    }
+
+    /**
      * Execute SQL query
      *
-     * @param string $sql Query
-     * @param array $values = [] Array of values
+     * @param string $sql    Query
+     * @param array  $values = [] Array of values
+     *
      * @return \PDOStatement
      * @throws QueryFailedException
      */
-    public function queryBind(string $sql, array $values = []): \PDOStatement
+    public function queryBind (string $sql, array $values = []): \PDOStatement
     {
         if (!$this->initialized) {
             $this->init();
@@ -149,7 +201,8 @@ class PDO extends \PDO
         try {
             if ($this->instance !== null) {
                 return $stmt = $this->instance->query($sql);
-            } else {
+            }
+            else {
                 return $stmt = parent::query($sql);
             }
         } catch (\PDOException $e) {
@@ -159,13 +212,14 @@ class PDO extends \PDO
                 strpos($message, 'no connection to the server') !== false ||
                 strpos($message, 'MySQL server has gone away') !== false) {
                 $this->instance = new self(...$this->construct);
+
                 return $stmt = $this->instance->query($sql);
             }
             throw new QueryFailedException('SQL query has failed: ' . $sql, 1, $e);
         } finally {
             if ($this->queryLogging && isset($stmt)) {
                 $this->queryLog[] = [
-                    'sql' => $sql,
+                    'sql'  => $sql,
                     'time' => microtime(true) - $t0,
                 ];
             }
@@ -176,30 +230,31 @@ class PDO extends \PDO
      * Resolves placeholders in given SQL query. Values corresponding to individual placeholders can be arrays,
      * in which case they are converted to IN() clauses.
      *
-     * @param string $sql Query
-     * @param array $values Array of values or key/value pairs (if using named placeholders). Values can be
+     * @param string $sql    Query
+     * @param array  $values Array of values or key/value pairs (if using named placeholders). Values can be
      *                       arrays, and will be converted to IN().
+     *
      * @return string
-     * @example ('SELECT * FROM table WHERE id = ?', []);
+     * @example ('SELECT * FROM table WHERE id = ?', [])                   ;
      *          returns 'SELECT * FROM table WHERE id = NULL'
      *
      * @example ('SELECT * FROM table WHERE id = :ids', ['ids' => [4,5,6]]);
      *          returns 'SELECT * FROM table WHERE id IN(4, 5, 6)'
      *
-     * @example ('SELECT * FROM table WHERE id IN(:ids)', ['ids' => [4,5,6]]);
+     * @example ('SELECT * FROM table WHERE id IN(:ids)                    ', ['ids' => [4,5,6]]);
      *          returns 'SELECT * FROM table WHERE id IN(4, 5, 6)'
      *
-     * @example ('SELECT * FROM table WHERE id = :id', ['id' => 1]);
+     * @example ('SELECT * FROM table WHERE id = :id', ['id' => 1])        ;
      *          returns 'SELECT * FROM table WHERE id = 1'
      *
-     * @example ('SELECT * FROM table WHERE id = ?', [1]);
+     * @example ('SELECT * FROM table WHERE id = ?', [1])                  ;
      *          returns 'SELECT * FROM table WHERE id = 1'
      *
-     * @example ('SELECT * FROM table WHERE id = ?', [[1,2,3]]);
+     * @example ('SELECT * FROM table WHERE id = ?', [[1,2,3]])            ;
      *          returns 'SELECT * FROM table WHERE id IN(1, 2, 3)'
      *
      */
-    public function replacePlaceholders(string $sql, ?array $values = null): string
+    public function replacePlaceholders (string $sql, ?array $values = null): string
     {
         if ($values === null) {
             return $sql;
@@ -222,8 +277,9 @@ class PDO extends \PDO
                 if (isset($matches[1]) && $matches[1] !== '') {
                     // ? or :foo
                     $placeholder = $matches[0];
-                    $in = 0;
-                } elseif (isset($matches[3]) && $matches[3] !== '') {
+                    $in          = 0;
+                }
+                else if (isset($matches[3]) && $matches[3] !== '') {
                     // = ... or != ...
                     $placeholder = $matches[3];
                     // Treat as IN, since vals could be array
@@ -232,15 +288,16 @@ class PDO extends \PDO
                 if (isset($matches[5])) {
                     // IN(...) or NOT IN(...)
                     $placeholder = $matches[5];
-                    $in = strlen($matches[4]) ? -1 : 1;
+                    $in          = strlen($matches[4]) ? -1 : 1;
                 }
 
                 // Get value for unnamed or named placeholder respectively (indexed vs. assoc. array)
                 if ($placeholder === '?') {
                     $dummy =& $values[$pos++];
-                } else {
+                }
+                else {
                     $placeholder = substr($placeholder, 1); // omit ':' prefix
-                    $dummy =& $values[$placeholder];
+                    $dummy       =& $values[$placeholder];
                 }
                 $val = $dummy;
 
@@ -248,11 +305,14 @@ class PDO extends \PDO
                 if ($val === null) {
                     if ($in === 0) {
                         $prefix = '';
-                    } elseif ($in === 1) {
+                    }
+                    else if ($in === 1) {
                         $prefix = ' = ';
-                    } else {
+                    }
+                    else {
                         $prefix = ' != ';
                     }
+
                     return $prefix . 'NULL';
                 }
 
@@ -261,24 +321,29 @@ class PDO extends \PDO
                     if ($in !== 0 && !count($val)) {
                         if ($in === 1) {
                             $prefix = ' = ';
-                        } else {
+                        }
+                        else {
                             $prefix = ' != ';
                         }
+
                         return $prefix . 'NULL'; // @TODO: think about empty IN()
                     }
 
                     if (count($val) === 1) {
                         // Set to scalar val for equality clause ( = val1)
                         $val = current($val);
-                    } else {
+                    }
+                    else {
                         // Multiple vals, so generate IN(val1, val2, ...) clause
                         if ($in !== 0) {
                             if ($in === 1) {
                                 $clause = ' IN(';
-                            } else {
+                            }
+                            else {
                                 $clause = ' NOT IN(';
                             }
-                        } else {
+                        }
+                        else {
                             // WHERE (val1, val2, .. ) @TODO Is this even valid SQL?
                             $clause = ' (';
                         }
@@ -288,12 +353,14 @@ class PDO extends \PDO
                         foreach ($val as $v) {
                             if ($v === null) {
                                 $v = 'NULL';
-                            } elseif (!is_integer($v) && !is_object($v)) {
+                            }
+                            else if (!is_integer($v) && !is_object($v)) {
                                 $v = $this->quote($v);
                             }
                             $clause .= ($i++ > 0 ? ', ' : '') . $v;
                         }
                         $clause .= ')';
+
                         return $clause;
                     }
                 }
@@ -302,26 +369,33 @@ class PDO extends \PDO
 
                 if ($valType === 'object') {
                     $val = $val->toString($this);
-                } elseif ($valType === 'boolean') {
+                }
+                else if ($valType === 'boolean') {
                     if ($this->driverName === 'pgsql') {
                         $val = $val ? 'true' : 'false';
-                    } else {
+                    }
+                    else {
                         $val = $val ? '1' : '0';
                     }
-                } elseif ($valType !== 'integer') {
+                }
+                else if ($valType !== 'integer') {
                     $val = $this->quote($val);
                 }
                 if ($in === 0) {
                     $prefix = '';
-                } elseif ($in === 1) {
+                }
+                else if ($in === 1) {
                     $prefix = ' = ';
-                } else {
+                }
+                else {
                     $prefix = ' != ';
                 }
+
                 return $prefix . $val;
             },
             $sql
         );
+
         return $sql;
     }
 }
